@@ -1,3 +1,15 @@
+
+/*
+to do: simulacion de pedir token y revisar cómo se libera el token ✅
+to do later: marcas de Lamport          
+Revisar codependencia entre clases - Errores de compilacion. 
+*/
+#ifdef _WIN32
+#include <Windows.h>
+#else 
+#include <unistd.h>
+#endif
+
 #include <iostream>
 #include <thread>
 #include <queue>
@@ -9,28 +21,77 @@ class proceso{
     int pid;
     int* token;
 
-    void liberarToken(servidor* S, int* tk){
-        S->disponible = true;
-        free(token);
-    }
+    void liberarToken(servidor* S);
+    int trabajar(servidor* S);
+
+
 };
 
 class servidor{
+
     private:
     int token;
     int timeout;
     std::queue <proceso*> cola;
 
     public:
-        bool disponible;
+    bool disponible;
+    void requestToken(proceso* P);
+    servidor();
 
-        servidor(){
+};
+
+
+
+int main (){
+
+    servidor* S = new servidor();
+
+    proceso* P1 = new proceso();
+    proceso* P2 = new proceso();
+    proceso* P3 = new proceso();
+
+    P1 ->pid = 0;
+    P2 ->pid = 1;
+    P3 ->pid = 2;
+
+    std::srand(std::time(nullptr));
+    int aleatorio = std::rand() % 3;
+    std::cout <<"hola:  " << aleatorio;
+
+    for (size_t i = 0; i < 3; i++)
+    {
+        switch (aleatorio)
+        {
+        case 0:
+            S->requestToken(P1);
+            break;
+        case 1:
+            S->requestToken(P2);
+            break;
+        case 2:
+            S->requestToken(P3);
+            break;
+        default:
+            break;
+        }
+
+        int var = P1->trabajar(S);
+        var  = P2->trabajar(S);
+        var  = P3->trabajar(S);
+    }
+    
+    
+
+}
+
+ servidor::servidor(){
             this -> token = 123;
             this -> disponible = true;
             this -> timeout = 100;
         }
 
-        void requestToken(int* tk, proceso* P){
+void servidor::requestToken(proceso* P){
             proceso* sigpid;
             if (this->disponible)
             {
@@ -53,52 +114,22 @@ class servidor{
             }
         }
 
-        void actualizar(){
-            proceso* sigpid;
-            if (!cola.empty())
-            {
-                sigpid = cola.front();
-                cola.pop();
-            }
-        }
-
-};
-
-
-int main (){
-
-    servidor* S = new servidor();
-
-    proceso* P1 = new proceso();
-    proceso* P2 = new proceso();
-    proceso* P3 = new proceso();
-
-    P1 ->pid = 0;
-    P2 ->pid = 1;
-    P3 ->pid = 2;
-
-    std::srand(std::time(nullptr));
-    int aleatorio = std::rand() % 3;
-    std::cout <<"hola:  " << aleatorio;
-
-/*
-to do: simulacion de pedir token y revisar cómo se libera el token
-*/
-    switch (aleatorio)
-    {
-    case 0:
-        
-        break;
-    case 1:
-        /* code */
-        break;
-    case 2:
-        /* code */
-        break;
-    default:
-        break;
+void proceso::liberarToken(servidor* S){
+        S->disponible = true;
+        free(token);
     }
 
+int proceso::trabajar(servidor* S){
+    if(token == nullptr){
+        std::cout << "Estoy en espera :( soy: " << this->pid << std::endl; 
+        return(0);
+    }
+    else {
+        std::cout << "Estoy trabajando :) soy: " << this->pid << std::endl; 
+        sleep(2);
+        liberarToken(S);
+        std::cout << "Ya termine de trabajar >.<  soy: " << this->pid << std::endl; 
+        return(1);
+    }
+        
 }
-
-
