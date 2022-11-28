@@ -21,14 +21,13 @@ class proceso{
     int pid;
     int* token;
 
-    void liberarToken(servidor* S);
-    int trabajar(servidor* S);
+    //void liberarToken(servidor* S);
+    //int trabajar(servidor* S);
 
 
 };
 
 class servidor{
-
     private:
     int token;
     int timeout;
@@ -37,11 +36,11 @@ class servidor{
     public:
     bool disponible;
     void requestToken(proceso* P);
+    void liberarToken(proceso* P);
     servidor();
-
 };
 
-
+int trabajar(servidor* S, proceso* P);
 
 int main (){
 
@@ -76,9 +75,9 @@ int main (){
             break;
         }
 
-        int var = P1->trabajar(S);
-        var  = P2->trabajar(S);
-        var  = P3->trabajar(S);
+        int var =   trabajar(S, P1);
+        var  =      trabajar(S, P2);
+        var  =      trabajar(S, P3);
     }
     
     
@@ -97,7 +96,7 @@ void servidor::requestToken(proceso* P){
             {
                 if (cola.empty()) //la cola está vacía, se toma directamente el token
                 {
-                    *P->token = token;
+                    P->token = &token;
                     this->disponible = false;
                 }
                 else    //en caso contrario se hace pop y se le asigna el token al proceso siguiente
@@ -114,21 +113,28 @@ void servidor::requestToken(proceso* P){
             }
         }
 
-void proceso::liberarToken(servidor* S){
-        S->disponible = true;
-        free(token);
+void servidor::liberarToken(proceso* P){
+        this->disponible = true;
+        free(P->token);
     }
 
-int proceso::trabajar(servidor* S){
-    if(token == nullptr){
-        std::cout << "Estoy en espera :( soy: " << this->pid << std::endl; 
+int trabajar(servidor* S, proceso* P){
+    if(P->token == nullptr){
+        std::cout << "Estoy en espera :( soy: " << P->pid << std::endl; 
         return(0);
     }
     else {
-        std::cout << "Estoy trabajando :) soy: " << this->pid << std::endl; 
-        sleep(2);
-        liberarToken(S);
-        std::cout << "Ya termine de trabajar >.<  soy: " << this->pid << std::endl; 
+        std::cout << "Estoy trabajando :) soy: " << P->pid << std::endl; 
+
+        //Bloque condicional del preprocesador horrible porque compilo con WSL (Linux) y el Debugger es de Windows XD
+        #ifdef _WIN32
+            Sleep(2);
+        #else 
+            sleep(2);
+        #endif
+
+        S->liberarToken(P);
+        std::cout << "Ya termine de trabajar >.<  soy: " << P->pid << std::endl; 
         return(1);
     }
         
