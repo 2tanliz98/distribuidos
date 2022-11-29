@@ -1,8 +1,12 @@
 
 /*
-to do: simulacion de pedir token y revisar cómo se libera el token ✅
+to do: Metodo Update para el servidor, donde revisa quien es el primero en la cola y le asigna el token.
+       mientras se encuentre disponible el token
 to do later: marcas de Lamport          
-Revisar codependencia entre clases - Errores de compilacion. 
+
+DONE:
+    Revisar codependencia entre clases - Errores de compilacion.  ✅
+    simulacion de pedir token y revisar cómo se libera el token ✅
 */
 #ifdef _WIN32
 #include <Windows.h>
@@ -37,6 +41,7 @@ class servidor{
     bool disponible;
     void requestToken(proceso* P);
     void liberarToken(proceso* P);
+    int getQueueSize();
     servidor();
 };
 
@@ -56,8 +61,10 @@ int main (){
 
     std::srand(std::time(nullptr));
     int aleatorio = std::rand() % 3;
-    std::cout <<"hola:  " << aleatorio;
+    std::cout <<"Proceso Inicial:  " << aleatorio << std::endl;
 
+
+    //Se decide al "azar" el orden de las solicitudes. 
     for (size_t i = 0; i < 3; i++)
     {
         switch (aleatorio)
@@ -75,13 +82,20 @@ int main (){
             break;
         }
 
-        int var =   trabajar(S, P1);
-        var  =      trabajar(S, P2);
-        var  =      trabajar(S, P3);
+        std::srand(std::time(nullptr));
+        aleatorio = std::rand() % 3;
+
+    }
+
+    //Se manda a trabajar hasta que la cola esté vacia. 
+    for (size_t i = 0; i < S->getQueueSize(); i++){
+          trabajar(S, P1);
+          trabajar(S, P2);
+          trabajar(S, P3);
     }
     
     
-
+    return 0;
 }
 
  servidor::servidor(){
@@ -98,6 +112,8 @@ void servidor::requestToken(proceso* P){
                 {
                     P->token = &token;
                     this->disponible = false;
+
+                    cola.push(P);
                 }
                 else    //en caso contrario se hace pop y se le asigna el token al proceso siguiente
                 {
@@ -105,6 +121,8 @@ void servidor::requestToken(proceso* P){
                     cola.pop();
                     *sigpid->token = token;
                     this->disponible = false;
+
+                    cola.push(P);
                 }                
             }
             else //si el token no está disponible se encola :)
@@ -115,8 +133,15 @@ void servidor::requestToken(proceso* P){
 
 void servidor::liberarToken(proceso* P){
         this->disponible = true;
-        free(P->token);
+        P->token = nullptr;
+        this->cola.pop();
     }
+
+int servidor::getQueueSize(){
+    return this->cola.size();
+}
+
+
 
 int trabajar(servidor* S, proceso* P){
     if(P->token == nullptr){
@@ -139,3 +164,4 @@ int trabajar(servidor* S, proceso* P){
     }
         
 }
+
