@@ -6,7 +6,7 @@ to do later: marcas de Lamport
 
 DONE:
     Revisar codependencia entre clases - Errores de compilacion.  ✅
-    simulacion de pedir token y revisar cómo se libera el token ✅
+    simulacion de pedir token y revisar cómo se libera el token   ✅
 */
 #ifdef _WIN32
 #include <Windows.h>
