@@ -42,6 +42,7 @@ class servidor{
     void requestToken(proceso* P);
     void liberarToken(proceso* P);
     int getQueueSize();
+    void upDateToken(proceso* P);
     servidor();
 };
 
@@ -82,13 +83,13 @@ int main (){
             break;
         }
 
-        std::srand(std::time(nullptr));
         aleatorio = std::rand() % 3;
+        std::cout <<"Proceso sig:  " << aleatorio << std::endl;
 
     }
 
     //Se manda a trabajar hasta que la cola esté vacia. 
-    for (size_t i = 0; i < S->getQueueSize(); i++){
+    while( S->getQueueSize() > 0){
           trabajar(S, P1);
           trabajar(S, P2);
           trabajar(S, P3);
@@ -112,7 +113,6 @@ void servidor::requestToken(proceso* P){
                 {
                     P->token = &token;
                     this->disponible = false;
-
                     cola.push(P);
                 }
                 else    //en caso contrario se hace pop y se le asigna el token al proceso siguiente
@@ -121,8 +121,7 @@ void servidor::requestToken(proceso* P){
                     cola.pop();
                     *sigpid->token = token;
                     this->disponible = false;
-
-                    cola.push(P);
+                    //cola.push(P);
                 }                
             }
             else //si el token no está disponible se encola :)
@@ -132,15 +131,32 @@ void servidor::requestToken(proceso* P){
         }
 
 void servidor::liberarToken(proceso* P){
+        std::cout << "liberar token: : " << P->pid << std::endl; 
+        proceso* tmp;
         this->disponible = true;
         P->token = nullptr;
+        //tmp = this->cola.front();
         this->cola.pop();
+        //std::cout <<"tmp: "  << tmp->pid << std::endl;
+        //std::cout <<"disponible liberar: "  << this->disponible << std::endl;
+        
+        if(this->getQueueSize()>0){
+            tmp = this->cola.front();
+            this->upDateToken(tmp);
+        }
     }
 
 int servidor::getQueueSize(){
+    //std::cout << "cola size: " << this->cola.size() << std::endl; 
     return this->cola.size();
 }
 
+void servidor::upDateToken(proceso* P){
+    //std::cout << "update: " << P->pid << std::endl; 
+        P->token = &token;
+        this->disponible = false;
+
+}
 
 
 int trabajar(servidor* S, proceso* P){
@@ -159,8 +175,16 @@ int trabajar(servidor* S, proceso* P){
         #endif
 
         S->liberarToken(P);
+        
         std::cout << "Ya termine de trabajar >.<  soy: " << P->pid << std::endl; 
+
+        /*if(S->getQueueSize()>0){
+            S->upDateToken(P);
+        }
+        */
+
         return(1);
+
     }
         
 }
