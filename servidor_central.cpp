@@ -20,6 +20,8 @@ DONE:
 #include <cstdlib>
 #include <ctime>
 
+#include <thread>
+
 class proceso{
     public:
     int pid;
@@ -68,6 +70,7 @@ int main (){
     //Se decide al "azar" el orden de las solicitudes. 
     for (size_t i = 0; i < 3; i++)
     {
+        std::cout << "Proceso que pide entrar a SC: " << aleatorio << std::endl;
         switch (aleatorio)
         {
         case 0:
@@ -84,16 +87,16 @@ int main (){
         }
 
         aleatorio = std::rand() % 3;
-        std::cout <<"Proceso sig:  " << aleatorio << std::endl;
+        //std::cout <<"Proceso sig:  " << aleatorio << std::endl;
 
     }
 
     //Se manda a trabajar hasta que la cola esté vacia. 
-    while( S->getQueueSize() > 0){
-          trabajar(S, P1);
-          trabajar(S, P2);
-          trabajar(S, P3);
-    }
+    //while( S->getQueueSize() > 0){
+    std::thread P0 (trabajar, S, P1);
+    std::thread P1 (trabajar, S, P2);
+    std::thread P2 (trabajar, S, P3);
+    //}
     
     
     return 0;
@@ -131,7 +134,7 @@ void servidor::requestToken(proceso* P){
         }
 
 void servidor::liberarToken(proceso* P){
-        std::cout << "liberar token: : " << P->pid << std::endl; 
+        //std::cout << "liberar token: : " << P->pid << std::endl; 
         proceso* tmp;
         this->disponible = true;
         P->token = nullptr;
