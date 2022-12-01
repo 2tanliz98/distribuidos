@@ -1,12 +1,11 @@
-
 /*
-to do: Metodo Update para el servidor, donde revisa quien es el primero en la cola y le asigna el token.
-       mientras se encuentre disponible el token
-to do later: marcas de Lamport          
+    to do: marcas de Lamport   *y solución a solicitudes seguidas del mismo proceso*
 
 DONE:
     Revisar codependencia entre clases - Errores de compilacion.  ✅
     simulacion de pedir token y revisar cómo se libera el token   ✅
+    update token ✅
+    aleatoriedad de solicitudes ✅
 */
 #ifdef _WIN32
 #include <Windows.h>
@@ -26,6 +25,7 @@ class proceso{
     public:
     int pid;
     int* token;
+    
 
     //void liberarToken(servidor* S);
     //int trabajar(servidor* S);
@@ -68,6 +68,7 @@ int main (){
 
 
     //Se decide al "azar" el orden de las solicitudes. 
+   
     for (size_t i = 0; i < 3; i++)
     {
         std::cout << "Proceso que pide entrar a SC: " << aleatorio << std::endl;
@@ -92,13 +93,20 @@ int main (){
     }
 
     //Se manda a trabajar hasta que la cola esté vacia. 
-    //while( S->getQueueSize() > 0){
-    std::thread P0 (trabajar, S, P1);
-    std::thread P1 (trabajar, S, P2);
-    std::thread P2 (trabajar, S, P3);
-    //}
+    while( S->getQueueSize() > 0){
+        std::thread T0 (trabajar, S, P1);
+        std::thread T1 (trabajar, S, P2);
+        std::thread T2 (trabajar, S, P3);
+
+        T0.detach();
+        T1.detach();
+        T2.detach();
+
+        sleep(2);    
+    }
+
     
-    
+
     return 0;
 }
 
@@ -120,11 +128,7 @@ void servidor::requestToken(proceso* P){
                 }
                 else    //en caso contrario se hace pop y se le asigna el token al proceso siguiente
                 {
-                    sigpid = cola.front();
-                    cola.pop();
-                    *sigpid->token = token;
-                    this->disponible = false;
-                    //cola.push(P);
+                    cola.push(P);
                 }                
             }
             else //si el token no está disponible se encola :)
@@ -163,9 +167,14 @@ void servidor::upDateToken(proceso* P){
 
 
 int trabajar(servidor* S, proceso* P){
+
+    int trabajar_mas  = std::rand() % 100;
+       std::cout << "ganas de trabajar extras de: " << P->pid << "  " << trabajar_mas << std::endl;
+    
+
     if(P->token == nullptr){
         std::cout << "Estoy en espera :( soy: " << P->pid << std::endl; 
-        return(0);
+       
     }
     else {
         std::cout << "Estoy trabajando :) soy: " << P->pid << std::endl; 
@@ -186,9 +195,17 @@ int trabajar(servidor* S, proceso* P){
         }
         */
 
-        return(1);
+       
 
     }
+
+    if (trabajar_mas > 87)
+    {
+        std::cout << "MAASSS >:D  soy: " << P->pid << std::endl; 
+        S->requestToken(P);
+    }
+
+     return(1);
         
 }
 
