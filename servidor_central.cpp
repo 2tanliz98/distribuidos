@@ -4,8 +4,8 @@
 DONE:
     Revisar codependencia entre clases - Errores de compilacion.  ✅
     simulacion de pedir token y revisar cómo se libera el token   ✅
-    update token ✅
-    aleatoriedad de solicitudes ✅
+                                                    update token  ✅
+                                      aleatoriedad de solicitudes ✅
 */
 #ifdef _WIN32
 #include <Windows.h>
@@ -20,6 +20,9 @@ DONE:
 #include <ctime>
 
 #include <thread>
+#include <fstream>
+#include <string>
+
 
 class proceso{
     public:
@@ -179,12 +182,14 @@ int trabajar(servidor* S, proceso* P){
     else {
         std::cout << "Estoy trabajando :) soy: " << P->pid << std::endl; 
 
-        //Bloque condicional del preprocesador horrible porque compilo con WSL (Linux) y el Debugger es de Windows XD
-        #ifdef _WIN32
-            Sleep(2);
-        #else 
-            sleep(2);
-        #endif
+
+        std::ofstream sal_SC;
+        sal_SC.open("SeccionCritica.txt", std::ofstream::app);
+       
+        sal_SC << "Escribí en CS :o,  soy: " << P->pid << std::endl; 
+        sal_SC.close();
+
+   
 
         S->liberarToken(P);
         
